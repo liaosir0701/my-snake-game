@@ -1,27 +1,125 @@
-# my-snake-game
+# 網頁版計算機
 
-Classic Snake game implementation with deterministic core logic.
+## 專案簡介
 
-## Run locally
+這是一個使用純 HTML、CSS 和 JavaScript 製作的網頁版計算機。
+介面簡潔美觀，功能完整，非常適合初學者學習與修改。
 
-```bash
-python3 -m http.server 4173
+## 功能列表
+
+### 基本運算
+- ✅ 加法（+）
+- ✅ 減法（-）
+- ✅ 乘法（×）
+- ✅ 除法（÷）
+
+### 清除功能
+- ✅ **CE** - 清除目前輸入的數字
+- ✅ **C** - 全部清除，回到初始狀態
+- ✅ **⌫** - 刪除最後一位數字
+
+### 小數點支援
+- ✅ 可輸入小數點進行小數運算
+- ✅ 自動避免一個數字內出現多個小數點
+
+### 錯誤處理
+- ✅ 除以 0 時顯示 "Error"
+- ✅ 錯誤後可按 C 鍵重新開始
+
+### 鍵盤支援
+- ✅ 數字鍵 0-9
+- ✅ 小數點 .
+- ✅ 運算子 + - * /
+- ✅ Enter 或 = 執行計算
+- ✅ Backspace 刪除
+- ✅ Escape 全部清除
+
+## 檔案結構說明
+
+```
+/workspace/
+├── index.html    # 主檔案（包含 HTML、CSS、JavaScript）
+└── README.md     # 本說明文件
 ```
 
-Open `http://localhost:4173` in your browser.
+### index.html
+這是唯一的程式檔案，採用「單一檔案」設計，包含：
+- **HTML** - 計算機的介面結構（按鈕、顯示區）
+- **CSS** - 計算機的樣式設計（顏色、排版、動畫）
+- **JavaScript** - 計算機的運算邏輯（加減乘除、事件處理）
 
-## Run tests
+這種設計讓學生只需要一個檔案就能使用，非常方便教學。
 
-```bash
-npm test
-```
+## 如何在本機執行
 
-## Manual verification checklist
+### 方法一：直接雙擊開啟（最簡單）
+1. 找到 `index.html` 檔案
+2. 用滑鼠雙擊它
+3. 預設瀏覽器會自動開啟，即可使用
 
-- Start game and verify snake moves on a fixed tick.
-- Control movement with Arrow keys and WASD.
-- Verify on-screen direction buttons work on touch/click.
-- Eat food and confirm snake grows and score increments.
-- Verify collision with walls or self triggers game over.
-- Verify Pause halts motion and Start resumes.
-- Verify Restart resets score and board.
+### 方法二：用瀏覽器開啟
+1. 開啟任何瀏覽器（Chrome、Firefox、Edge 等）
+2. 按 `Ctrl + O`（或選單：檔案 > 開啟檔案）
+3. 選擇 `index.html` 檔案
+4. 即可使用
+
+### 不需要任何安裝！
+- ❌ 不需要 Python
+- ❌ 不需要 Node.js
+- ❌ 不需要伺服器
+- ❌ 不需要網路連線
+
+## 鍵盤快捷鍵說明
+
+| 按鍵 | 功能 | 對應按鈕 |
+|------|------|----------|
+| `0` - `9` | 輸入數字 | 數字按鈕 |
+| `.` | 輸入小數點 | . 按鈕 |
+| `+` | 加法 | + 按鈕 |
+| `-` | 減法 | − 按鈕 |
+| `*` 或 `x` | 乘法 | × 按鈕 |
+| `/` | 除法 | ÷ 按鈕 |
+| `Enter` 或 `=` | 計算結果 | = 按鈕 |
+| `Backspace` | 刪除最後一位 | ⌫ 按鈕 |
+| `Escape` | 全部清除 | C 按鈕 |
+| `c` 或 `C` | 全部清除 | C 按鈕 |
+
+## 可延伸功能建議
+
+如果你想挑戰更進階的功能，可以嘗試加入：
+
+### 1. 百分比（%）
+- 將數字轉換為百分比
+- 例如：輸入 50 按 % 變成 0.5
+
+### 2. 正負號切換（±）
+- 切換數字的中負號
+- 例如：5 變成 -5，-3 變成 3
+
+### 3. 計算歷史紀錄
+- 記錄之前的計算過程
+- 讓使用者可以查看或重複使用
+
+### 4. 深色模式（Dark Mode）
+- 提供深色主題供使用者選擇
+- 保護眼睛，適合晚上使用
+
+### 5. 更多運算功能
+- 平方根（√）
+- 平方（x²）
+- 倒數（1/x）
+
+### 6. 記憶功能
+- M+：將數字加入記憶
+- M-：從記憶中減去數字
+- MR：讀取記憶
+- MC：清除記憶
+
+## 給初學者的學習建議
+
+1. **先試著修改顏色**：在 CSS 部分改變按鈕顏色，看看效果
+2. **調整按鈕大小**：修改 padding 和 font-size 的值
+3. **新增功能**：試著加入百分比或正負號切換功能
+4. **閱讀註解**：程式碼中有詳細的中文註解，幫助你理解邏輯
+
+祝你學習愉快！

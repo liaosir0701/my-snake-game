@@ -1,40 +1,685 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Classic Snake</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="app">
-      <header class="hud">
-        <h1>Snake</h1>
-        <p>Score: <span id="score">0</span></p>
-      </header>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁版計算機</title>
+    
+    <!-- 
+        =============================================
+        CSS 樣式區 - 控制計算機的外觀設計
+        =============================================
+    -->
+    <style>
+        /* ========== 整體頁面設定 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-      <section id="game-board" class="board" aria-label="Snake game board"></section>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
 
-      <section class="controls">
-        <div class="row">
-          <button data-dir="up" aria-label="Move up">↑</button>
+        /* ========== 計算機主容器 ========== */
+        .calculator {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            width: 100%;
+            max-width: 380px;
+        }
+
+        /* ========== 顯示區域設定 ========== */
+        .display-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: right;
+            border: 2px solid #e9ecef;
+        }
+
+        /* 顯示算式的區域（較小的文字） */
+        .expression {
+            font-size: 16px;
+            color: #6c757d;
+            min-height: 24px;
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+
+        /* 顯示目前數字的主顯示區（大字體） */
+        .current-value {
+            font-size: 42px;
+            font-weight: bold;
+            color: #212529;
+            min-height: 50px;
+            word-wrap: break-word;
+            overflow-x: auto;
+        }
+
+        /* ========== 按鈕區域設定 ========== */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        /* ========== 按鈕通用樣式 ========== */
+        .btn {
+            padding: 20px;
+            font-size: 22px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        /* 按鈕按下去的效果 */
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 滑鼠移上去的效果 */
+        .btn:hover {
+            filter: brightness(1.05);
+        }
+
+        /* ========== 不同類型按鈕的顏色 ========== */
+        /* 數字按鈕 - 淺灰色 */
+        .btn-number {
+            background: #e9ecef;
+            color: #212529;
+        }
+
+        .btn-number:hover {
+            background: #dee2e6;
+        }
+
+        /* 運算子按鈕 - 藍色 */
+        .btn-operator {
+            background: #4dabf7;
+            color: white;
+        }
+
+        .btn-operator:hover {
+            background: #339af0;
+        }
+
+        /* 功能按鈕（清除等）- 橘色 */
+        .btn-function {
+            background: #ffa94d;
+            color: white;
+        }
+
+        .btn-function:hover {
+            background: #ff922b;
+        }
+
+        /* 等號按鈕 - 綠色 */
+        .btn-equals {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-equals:hover {
+            background: #40c057;
+        }
+
+        /* ========== 特殊按鈕設定 ========== */
+        /* 讓 0 按鈕跨兩格寬度 */
+        .btn-zero {
+            grid-column: span 2;
+        }
+
+        /* 錯誤訊息的樣式 */
+        .error {
+            color: #e03131 !important;
+        }
+
+        /* ========== 響應式設計 ========== */
+        @media (max-width: 400px) {
+            .calculator {
+                padding: 15px;
+            }
+
+            .btn {
+                padding: 15px;
+                font-size: 18px;
+            }
+
+            .current-value {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 
+        =============================================
+        HTML 結構區 - 計算機的介面元素
+        =============================================
+    -->
+    <div class="calculator">
+        <!-- 顯示區域：包含算式和目前數值 -->
+        <div class="display-container">
+            <!-- 顯示之前的運算式，例如 "5 + 3" -->
+            <div class="expression" id="expression"></div>
+            <!-- 顯示目前輸入的數字或結果 -->
+            <div class="current-value" id="display">0</div>
         </div>
-        <div class="row">
-          <button data-dir="left" aria-label="Move left">←</button>
-          <button data-dir="down" aria-label="Move down">↓</button>
-          <button data-dir="right" aria-label="Move right">→</button>
+
+        <!-- 按鈕區域：所有計算機按鈕 -->
+        <div class="buttons">
+            <!-- 第一列：功能按鈕和除法 -->
+            <button class="btn btn-function" data-action="ce">CE</button>
+            <button class="btn btn-function" data-action="c">C</button>
+            <button class="btn btn-function" data-action="backspace">⌫</button>
+            <button class="btn btn-operator" data-operator="÷">÷</button>
+
+            <!-- 第二列：數字 7-9 和乘法 -->
+            <button class="btn btn-number" data-number="7">7</button>
+            <button class="btn btn-number" data-number="8">8</button>
+            <button class="btn btn-number" data-number="9">9</button>
+            <button class="btn btn-operator" data-operator="×">×</button>
+
+            <!-- 第三列：數字 4-6 和減法 -->
+            <button class="btn btn-number" data-number="4">4</button>
+            <button class="btn btn-number" data-number="5">5</button>
+            <button class="btn btn-number" data-number="6">6</button>
+            <button class="btn btn-operator" data-operator="-">−</button>
+
+            <!-- 第四列：數字 1-3 和加法 -->
+            <button class="btn btn-number" data-number="1">1</button>
+            <button class="btn btn-number" data-number="2">2</button>
+            <button class="btn btn-number" data-number="3">3</button>
+            <button class="btn btn-operator" data-operator="+">+</button>
+
+            <!-- 第五列：0、小數點、等號 -->
+            <button class="btn btn-number btn-zero" data-number="0">0</button>
+            <button class="btn btn-number" data-number=".">.</button>
+            <button class="btn btn-equals" data-action="equals">=</button>
         </div>
-      </section>
+    </div>
 
-      <section class="actions">
-        <button id="start">Start</button>
-        <button id="pause">Pause</button>
-        <button id="restart">Restart</button>
-      </section>
+    <!-- 
+        =============================================
+        JavaScript 程式區 - 計算機的運算邏輯
+        =============================================
+    -->
+    <script>
+        // =====================================================
+        // 變數宣告區 - 用來儲存計算機的狀態
+        // =====================================================
 
-      <p id="status" role="status">Press Start to play. Use arrow keys or WASD.</p>
-    </main>
+        /**
+         * currentInput: 目前正在輸入的數字（字串格式）
+         * 例如：當使用者按下 1、2、3 時，這裡會變成 "123"
+         */
+        let currentInput = '0';
 
-    <script type="module" src="src/main.mjs"></script>
-  </body>
+        /**
+         * previousInput: 之前輸入的數字（用於運算）
+         * 例如：輸入 "5 + 3" 時，5 會存在這裡
+         */
+        let previousInput = null;
+
+        /**
+         * operator: 目前選擇的運算子
+         * 可能的值：'+', '-', '×', '÷' 或 null（沒有運算子）
+         */
+        let operator = null;
+
+        /**
+         * shouldResetDisplay: 是否需要重置顯示
+         * 當按下運算子後，下一次輸入數字時需要從頭開始
+         */
+        let shouldResetDisplay = false;
+
+        /**
+         * hasError: 是否處於錯誤狀態
+         * 當發生錯誤（如除以 0）時設為 true
+         */
+        let hasError = false;
+
+        // =====================================================
+        // 取得畫面元素 - 讓我們可以用 JavaScript 操作 HTML
+        // =====================================================
+
+        /**
+         * displayElement: 顯示目前數值的元素（大數字）
+         */
+        const displayElement = document.getElementById('display');
+
+        /**
+         * expressionElement: 顯示算式的元素（小字）
+         */
+        const expressionElement = document.getElementById('expression');
+
+        // =====================================================
+        // 主要功能函式區 - 計算機的核心邏輯
+        // =====================================================
+
+        /**
+         * updateDisplay() - 更新顯示畫面
+         * 
+         * 這個函式負責把目前的數值顯示在螢幕上
+         * 如果數字太長，會用科學記號表示
+         */
+        function updateDisplay() {
+            // 如果有錯誤，顯示 "Error"
+            if (hasError) {
+                displayElement.textContent = 'Error';
+                displayElement.classList.add('error');
+                return;
+            }
+
+            // 移除錯誤樣式
+            displayElement.classList.remove('error');
+
+            // 顯示目前的輸入值
+            displayElement.textContent = currentInput;
+
+            // 更新上方的算式顯示
+            updateExpression();
+        }
+
+        /**
+         * updateExpression() - 更新算式顯示
+         * 
+         * 在上方的顯示區顯示目前的運算狀態
+         * 例如："5 + 3" 或 "10 ×"
+         */
+        function updateExpression() {
+            if (previousInput !== null && operator !== null) {
+                // 如果有前一個數字和運算子，顯示完整的算式
+                expressionElement.textContent = `${previousInput} ${operator}`;
+            } else {
+                // 否則清空算式區
+                expressionElement.textContent = '';
+            }
+        }
+
+        /**
+         * inputNumber(number) - 輸入數字
+         * 
+         * @param {string} number - 要輸入的數字（0-9 或小數點）
+         * 
+         * 處理邏輯：
+         * 1. 如果有錯誤，先清除錯誤
+         * 2. 如果需要重置，清空目前的輸入
+         * 3. 如果是小數點，檢查是否已經有小數點
+         * 4. 如果是 0 且目前是 0，不重複添加
+         * 5. 其他情況直接添加到數字後面
+         */
+        function inputNumber(number) {
+            // 如果有錯誤，先清除錯誤狀態
+            if (hasError) {
+                clearAll();
+            }
+
+            // 如果剛按過運算子，需要重置顯示
+            if (shouldResetDisplay) {
+                currentInput = '0';
+                shouldResetDisplay = false;
+            }
+
+            // 處理小數點的特殊情況
+            if (number === '.') {
+                // 如果已經有小數點，就不再加（避免出現 1.2.3 這種情況）
+                if (currentInput.includes('.')) {
+                    return; // 直接離開，不做任何事
+                }
+                // 在小數點後面加 0，讓它變成 "0."
+                currentInput += '.';
+            } 
+            // 處理數字 0 的特殊情況
+            else if (number === '0') {
+                // 如果目前是 "0"，不要再加 0（避免變成 "00"）
+                // 但如果已经有小數點，可以加 0（例如 "0.0"）
+                if (currentInput === '0' && !currentInput.includes('.')) {
+                    return; // 直接離開
+                }
+                currentInput += '0';
+            } 
+            // 處理一般數字（1-9）
+            else {
+                // 如果目前是 "0"，直接替換成輸入的數字
+                if (currentInput === '0') {
+                    currentInput = number;
+                } else {
+                    // 否則加到數字後面
+                    currentInput += number;
+                }
+            }
+
+            // 更新顯示畫面
+            updateDisplay();
+        }
+
+        /**
+         * inputOperator(newOperator) - 輸入運算子
+         * 
+         * @param {string} newOperator - 運算子（+、-、×、÷）
+         * 
+         * 處理邏輯：
+         * 1. 如果有錯誤，先清除
+         * 2. 如果已經有運算子且準備好計算，先計算結果
+         * 3. 儲存目前的數字和運算子
+         * 4. 標記下次輸入需要重置
+         */
+        function inputOperator(newOperator) {
+            // 如果有錯誤，先清除錯誤狀態
+            if (hasError) {
+                clearAll();
+            }
+
+            // 如果已經有運算子，而且不是剛按完運算子
+            if (operator !== null && !shouldResetDisplay) {
+                // 先計算之前的結果
+                calculateResult();
+            }
+
+            // 儲存前一個數字（用於計算）
+            previousInput = currentInput;
+
+            // 儲存新的運算子
+            operator = newOperator;
+
+            // 標記：下次輸入數字時需要重置
+            shouldResetDisplay = true;
+
+            // 更新顯示
+            updateDisplay();
+        }
+
+        /**
+         * calculateResult() - 計算結果
+         * 
+         * 執行實際的數學運算
+         * 處理除以 0 的錯誤情況
+         */
+        function calculateResult() {
+            // 如果缺少必要資料，不計算
+            if (previousInput === null || operator === null) {
+                return;
+            }
+
+            // 把字串轉換成數字
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            // 如果數字無效，不計算
+            if (isNaN(prev) || isNaN(current)) {
+                return;
+            }
+
+            let result;
+
+            // 根據運算子執行不同的計算
+            switch (operator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '×':
+                    result = prev * current;
+                    break;
+                case '÷':
+                    // 特別處理：除以 0 的情況
+                    if (current === 0) {
+                        // 設置錯誤狀態
+                        hasError = true;
+                        previousInput = null;
+                        operator = null;
+                        updateDisplay();
+                        return;
+                    }
+                    result = prev / current;
+                    break;
+                default:
+                    return;
+            }
+
+            // 處理浮點數精度問題（例如 0.1 + 0.2 = 0.30000000000000004）
+            // 四捨五入到小數點後 10 位，再去除多餘的 0
+            result = Math.round(result * 10000000000) / 10000000000;
+
+            // 把結果轉成字串
+            currentInput = result.toString();
+
+            // 清空之前的數字和運算子
+            previousInput = null;
+            operator = null;
+
+            // 標記：下次輸入數字時需要重置
+            shouldResetDisplay = true;
+
+            // 更新顯示
+            updateDisplay();
+        }
+
+        /**
+         * clearEntry() - 清除目前輸入（CE 功能）
+         * 
+         * 只清除目前正在輸入的數字，保留運算子和之前的數字
+         * 例如：輸入 "5 + 3" 後按 CE，會變成 "5 + 0"
+         */
+        function clearEntry() {
+            // 如果有錯誤，改用全部清除
+            if (hasError) {
+                clearAll();
+                return;
+            }
+
+            // 重置目前輸入為 0
+            currentInput = '0';
+
+            // 更新顯示
+            updateDisplay();
+        }
+
+        /**
+         * clearAll() - 全部清除（C 功能）
+         * 
+         * 清除所有狀態，回到初始狀態
+         * 就像剛打開計算機一樣
+         */
+        function clearAll() {
+            // 重置所有變數
+            currentInput = '0';
+            previousInput = null;
+            operator = null;
+            shouldResetDisplay = false;
+            hasError = false;
+
+            // 更新顯示
+            updateDisplay();
+        }
+
+        /**
+         * backspace() - 刪除最後一位（退格鍵功能）
+         * 
+         * 刪除目前數字的最後一個字元
+         * 如果刪完了，就變成 0
+         */
+        function backspace() {
+            // 如果有錯誤，先清除錯誤
+            if (hasError) {
+                clearAll();
+                return;
+            }
+
+            // 如果只有一位數，變成 0
+            if (currentInput.length === 1) {
+                currentInput = '0';
+            } else {
+                // 刪除最後一個字元
+                currentInput = currentInput.slice(0, -1);
+            }
+
+            // 更新顯示
+            updateDisplay();
+        }
+
+        // =====================================================
+        // 事件處理區 - 監聽使用者的操作
+        // =====================================================
+
+        /**
+         * handleButtonClick(event) - 處理按鈕點擊事件
+         * 
+         * 當使用者點擊任何按鈕時，這個函式會被呼叫
+         * 它會判斷按的是什麼按鈕，然後呼叫對應的功能
+         */
+        function handleButtonClick(event) {
+            const button = event.target;
+
+            // 如果點的不是按鈕，離開
+            if (!button.classList.contains('btn')) {
+                return;
+            }
+
+            // 檢查是不是數字按鈕
+            const number = button.getAttribute('data-number');
+            if (number !== null) {
+                inputNumber(number);
+                return;
+            }
+
+            // 檢查是不是運算子按鈕
+            const op = button.getAttribute('data-operator');
+            if (op !== null) {
+                inputOperator(op);
+                return;
+            }
+
+            // 檢查是不是功能按鈕
+            const action = button.getAttribute('data-action');
+            switch (action) {
+                case 'equals':
+                    calculateResult();
+                    break;
+                case 'ce':
+                    clearEntry();
+                    break;
+                case 'c':
+                    clearAll();
+                    break;
+                case 'backspace':
+                    backspace();
+                    break;
+            }
+        }
+
+        /**
+         * handleKeyboard(event) - 處理鍵盤輸入事件
+         * 
+         * 讓使用者可以用鍵盤操作計算機
+         * 對應關係：
+         * - 數字鍵 0-9 → 輸入數字
+         * - 小數點 . → 輸入小數點
+         * - + - * / → 輸入運算子
+         * - Enter = → 計算結果
+         * - Backspace → 刪除
+         * - Escape → 全部清除
+         */
+        function handleKeyboard(event) {
+            const key = event.key;
+
+            // 數字鍵 0-9
+            if (key >= '0' && key <= '9') {
+                inputNumber(key);
+                return;
+            }
+
+            // 小數點
+            if (key === '.') {
+                inputNumber('.');
+                return;
+            }
+
+            // 運算子
+            if (key === '+') {
+                inputOperator('+');
+                return;
+            }
+            if (key === '-') {
+                inputOperator('-');
+                return;
+            }
+            if (key === '*' || key === 'x' || key === 'X') {
+                inputOperator('×');
+                return;
+            }
+            if (key === '/') {
+                inputOperator('÷');
+                return;
+            }
+
+            // Enter 或 = 鍵 → 計算結果
+            if (key === 'Enter' || key === '=') {
+                event.preventDefault(); // 防止 Enter 送出表單
+                calculateResult();
+                return;
+            }
+
+            // Backspace → 刪除
+            if (key === 'Backspace') {
+                backspace();
+                return;
+            }
+
+            // Escape → 全部清除
+            if (key === 'Escape') {
+                clearAll();
+                return;
+            }
+
+            // c 或 C → 清除（如果在非輸入狀態）
+            if (key === 'c' || key === 'C') {
+                clearAll();
+                return;
+            }
+        }
+
+        // =====================================================
+        // 初始化區 - 程式啟動時的設定
+        // =====================================================
+
+        /**
+         * initCalculator() - 初始化計算機
+         * 
+         * 設定所有的事件監聽器
+         */
+        function initCalculator() {
+            // 為所有按鈕添加點擊事件監聽
+            const buttonsContainer = document.querySelector('.buttons');
+            buttonsContainer.addEventListener('click', handleButtonClick);
+
+            // 添加鍵盤事件監聽
+            document.addEventListener('keydown', handleKeyboard);
+
+            // 初始化顯示
+            updateDisplay();
+        }
+
+        // 當網頁載入完成後，執行初始化
+        initCalculator();
+
+    </script>
+</body>
 </html>
